@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard Absensi & Laporan Kerja</title>
+  
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(-8px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-slate-100 bg-slate-950 overflow-x-hidden">
+
+  <header class="w-full border-b border-slate-800/80 px-4 py-4 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto flex items-center gap-3">
+      <i data-lucide="clipboard-check" class="text-blue-500 w-7 h-7 flex-shrink-0"></i>
+      <h1 class="text-xl font-bold tracking-tight text-slate-100 sm:text-2xl truncate">Absensi & Laporan Kerja</h1>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden w-full">
+    
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full">
+      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40">
+        <p class="text-xs sm:text-sm uppercase tracking-wide opacity-70 text-slate-400 font-medium">Total Laporan</p>
+        <p id="stat-total-value" class="text-2xl sm:text-3xl font-bold mt-1 text-blue-400">0</p>
+      </div>
+      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40">
+        <p class="text-xs sm:text-sm uppercase tracking-wide opacity-70 text-emerald-400 font-medium">Status: Hadir</p>
+        <p id="stat-active-value" class="text-2xl sm:text-3xl font-bold mt-1 text-emerald-400">0</p>
+      </div>
+      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40">
+        <p class="text-xs sm:text-sm uppercase tracking-wide opacity-70 text-amber-400 font-medium">Status: Izin / Sakit</p>
+        <p id="stat-pending-value" class="text-2xl sm:text-3xl font-bold mt-1 text-amber-400">0</p>
+      </div>
+    </section>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-900/20 p-4 rounded-xl border border-slate-800/60 w-full box-border">
+      <div class="grid grid-cols-1 gap-2 w-full md:flex md:flex-wrap md:w-auto">
+        <select id="filter-category" class="w-full md:w-auto bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" onchange="renderList()">
+          <option value="">Semua Laporan Kerja</option>
+          <option value="Angkat Bangku">Angkat Bangku</option>
+          <option value="Bersihkan Ruangan">Bersihkan Ruangan</option>
+          <option value="Atur Meja">Atur Meja</option>
+          <option value="Lainnya">Tugas Lainnya</option>
+        </select> 
+        
+        <div class="grid grid-cols-2 gap-2 w-full md:flex md:w-auto">
+          <select id="filter-status" class="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" onchange="renderList()">
+            <option value="">Absen</option>
+            <option value="Hadir">Hadir</option>
+            <option value="Izin">Izin</option>
+            <option value="Sakit">Sakit</option>
+          </select>
+
+          <select id="filter-progress" class="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" onchange="renderList()">
+            <option value="">Status</option>
+            <option value="Selesai">Selesai</option>
+            <option value="Belum Selesai">Belum Selesai</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="w-full md:w-auto px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm flex-shrink-0" onclick="toggleForm()">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> Isi Absensi & Kerja
+      </button>
+    </div>
+
+    <form id="add-form" class="hidden fade-in rounded-xl p-4 sm:p-6 space-y-4 bg-slate-900 border border-slate-800 shadow-xl w-full" onsubmit="handleSubmit(event)">
+      <h2 id="form-heading" class="text-base sm:text-lg font-bold text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+        <i data-lucide="pen-tool" class="w-5 h-5 text-blue-400"></i> Form Input Laporan
+      </h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="input-title" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Nama Karyawan / Pekerja</label> 
+          <input id="input-title" type="text" required placeholder="Contoh: Ahmad Dhani" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label for="input-category" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Laporan Pekerjaan Hari Ini</label> 
+          <select id="input-category" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+            <option value="Angkat Bangku">Angkat Bangku</option>
+            <option value="Bersihkan Ruangan">Bersihkan Ruangan</option>
+            <option value="Atur Meja">Atur Meja</option>
+            <option value="Lainnya">Tugas Lainnya / Tidak Ada</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="col-span-2 sm:col-span-1">
+          <label for="input-status" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Status Absensi</label> 
+          <select id="input-status" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+            <option value="Hadir">Hadir</option>
+            <option value="Izin">Izin</option>
+            <option value="Sakit">Sakit</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="input-time-start" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Jam Masuk</label> 
+          <input id="input-time-start" type="time" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label for="input-time-end" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Jam Selesai</label> 
+          <input id="input-time-end" type="time" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="col-span-2 sm:col-span-1">
+          <label for="input-progress" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Status Tugas</label> 
+          <select id="input-progress" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+            <option value="Selesai">Selesai</option>
+            <option value="Belum Selesai">Belum Selesai</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex gap-2 pt-2 border-t border-slate-800">
+        <button type="submit" id="submit-btn" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-emerald-600 hover:bg-emerald-500 text-white text-sm flex items-center justify-center gap-1">
+          <i data-lucide="check" class="w-4 h-4"></i> Simpan Laporan
+        </button> 
+        <button type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm" onclick="toggleForm()">
+          Batal
+        </button>
+      </div>
+    </form>
+
+    <div id="data-container" class="w-full overflow-hidden"></div>
+
+    <p id="empty-state" class="text-center py-12 text-slate-600 text-sm w-full">
+      <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+      Belum ada data absensi. Klik tombol di atas untuk mengisi laporan baru.
+    </p>
+  </main>
+
+  <script>
+    let allData = [];
+    let editingId = null;
+
+    function init() {
+      updateStats();
+      renderList();
+    }
+    window.onload = init;
+
+    function updateStats() {
+      document.getElementById('stat-total-value').textContent = allData.length;
+      document.getElementById('stat-active-value').textContent = allData.filter(d => d.status === 'Hadir').length;
+      document.getElementById('stat-pending-value').textContent = allData.filter(d => d.status === 'Izin' || d.status === 'Sakit').length;
+    }
+
+    function getFiltered() {
+      const cat = document.getElementById('filter-category').value;
+      const st = document.getElementById('filter-status').value;
+      const prg = document.getElementById('filter-progress').value;
+      return allData.filter(d => (!cat || d.category === cat) && (!st || d.status === st) && (!prg || d.progress === prg));
+    }
+
+    function toggleProgressDirectly(id) {
+      const item = allData.find(d => d.id === id);
+      if (item) {
+        item.progress = (item.progress === 'Selesai') ? 'Belum Selesai' : 'Selesai';
+        if (item.progress === 'Selesai' && !item.timeEnd) {
+          const now = new Date();
+          item.timeEnd = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        }
+        renderList();
+      }
+    }
+
+    function renderList() {
+      const container = document.getElementById('data-container');
+      const filtered = getFiltered();
+      const empty = document.getElementById('empty-state');
+      
+      if (filtered.length === 0) {
+        empty.classList.remove('hidden');
+        container.innerHTML = '';
+        return;
+      }
+      
+      empty.classList.add('hidden');
+
+      container.innerHTML = `
+        <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/10 max-w-full">
+          <table class="w-full text-sm text-left table-auto">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-xs tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="px-4 py-3.5 whitespace-nowrap">Nama Pekerja</th>
+                <th class="px-4 py-3.5 whitespace-nowrap">Pekerjaan</th>
+                <th class="px-4 py-3.5 whitespace-nowrap">Absensi</th>
+                <th class="px-4 py-3.5 whitespace-nowrap">Tanggal</th>
+                <th class="px-4 py-3.5 whitespace-nowrap">Waktu Kerja</th>
+                <th class="px-4 py-3.5 whitespace-nowrap">Status Tugas</th>
+                <th class="px-4 py-3.5 text-center whitespace-nowrap">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-pc" class="text-slate-200 divide-y divide-slate-900/60"></tbody>
+          </table>
+        </div>
+
+        <div id="card-list-mobile" class="block md:hidden space-y-3 w-full overflow-hidden"></div>
+      `;
+
+      const tbodyPc = document.getElementById('table-body-pc');
+      const mobileList = document.getElementById('card-list-mobile');
+
+      filtered.forEach(item => {
+        const date = new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        
+        let statusClass = item.status === 'Hadir' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : (item.status === 'Izin' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20');
+        let statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs border ${statusClass}">${item.status}</span>`;
+
+        let progClass = item.progress === 'Selesai' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+        let dotClass = item.progress === 'Selesai' ? 'bg-teal-400' : 'bg-orange-400';
+        let progressBtnHtml = `
+          <button onclick="toggleProgressDirectly('${item.id}')" class="px-2 py-1 rounded-md text-xs font-medium border flex items-center gap-1.5 transition ${progClass}">
+            <span class="w-1.5 h-1.5 rounded-full ${dotClass}"></span>
+            <span>${item.progress}</span>
+          </button>`;
+
+        const displayTimeEnd = item.timeEnd ? item.timeEnd : '--:--';
+        const timeDisplay = `<span class="text-blue-400 font-semibold">${item.timeStart}</span> <span class="text-slate-600">-</span> <span class="text-indigo-400 font-semibold">${displayTimeEnd}</span> <span class="text-[10px] text-slate-500">WIB</span>`;
+
+        // Versi PC
+        const tr = document.createElement('tr');
+        tr.className = 'border-t border-slate-900 hover:bg-slate-900/30 transition';
+        tr.innerHTML = `
+          <td class="px-4 py-3.5 font-medium text-slate-200 whitespace-nowrap">${esc(item.title)}</td>
+          <td class="px-4 py-3.5 text-slate-400 whitespace-nowrap"><span class="flex items-center gap-1.5"><i data-lucide="wrench" class="w-3.5 h-3.5 opacity-60"></i> ${esc(item.category)}</span></td>
+          <td class="px-4 py-3.5 whitespace-nowrap">${statusBadge}</td>
+          <td class="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">${date}</td>
+          <td class="px-4 py-3.5 font-mono text-sm whitespace-nowrap">${timeDisplay}</td>
+          <td class="px-4 py-3.5 whitespace-nowrap">${progressBtnHtml}</td>
+          <td class="px-4 py-3.5 text-center whitespace-nowrap">
+            <div class="flex justify-center gap-3">
+              <button onclick="startEdit('${item.id}')" class="text-blue-400 hover:text-blue-300"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+              <button onclick="confirmDelete('${item.id}', false)" class="text-red-400 hover:text-red-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </td>`;
+        tbodyPc.appendChild(tr);
+
+        // Versi HP
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl border border-slate-800/80 bg-slate-900/20 space-y-3 w-full max-w-full box-border';
+        card.setAttribute('data-mobile-id', item.id);
+        card.innerHTML = `
+          <div class="flex items-start justify-between border-b border-slate-900/80 pb-2 gap-2">
+            <div class="min-w-0 flex-1">
+              <h3 class="font-bold text-slate-100 text-base break-words">${esc(item.title)}</h3>
+              <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 flex-shrink-0"></i> ${date}</p>
+            </div>
+            <div class="flex-shrink-0">${statusBadge}</div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
+            <div class="min-w-0">
+              <p class="text-slate-500 text-[10px] uppercase tracking-wide font-medium">Pekerjaan</p>
+              <p class="font-medium text-slate-200 mt-0.5 flex items-center gap-1 truncate"><i data-lucide="wrench" class="w-3 h-3 text-slate-500 flex-shrink-0"></i> ${esc(item.category)}</p>
+            </div>
+            <div>
+              <p class="text-slate-500 text-[10px] uppercase tracking-wide font-medium">Waktu Kerja</p>
+              <p class="font-mono mt-0.5 flex items-center gap-0.5 flex-wrap">${timeDisplay}</p>
+            </div>
+          </div>
+
+          <div class="flex items-end justify-between pt-2 border-t border-slate-900/60 gap-2">
+            <div>
+              <p class="text-slate-500 text-[10px] uppercase tracking-wide mb-1 font-medium">Status Tugas</p>
+              ${progressBtnHtml}
+            </div>
+            <div class="flex gap-2 items-center flex-shrink-0">
+              <button onclick="startEdit('${item.id}')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg flex items-center gap-1 text-xs font-medium"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit</button>
+              <button onclick="confirmDelete('${item.id}', true)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-red-400 rounded-lg flex items-center gap-1 text-xs font-medium"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus</button>
+            </div>
+          </div>
+        `;
+        mobileList.appendChild(card);
+      });
+      
+      lucide.createIcons();
+    }
+
+    function esc(s) { 
+      const d = document.createElement('div'); 
+      d.textContent = s; 
+      return d.innerHTML; 
+    }
+
+    function toggleForm() {
+      const f = document.getElementById('add-form');
+      const heading = document.getElementById('form-heading');
+      f.classList.toggle('hidden');
+      if (f.classList.contains('hidden')) { 
+        editingId = null; 
+        f.reset(); 
+      } else {
+        heading.innerHTML = editingId ? '<i data-lucide="edit-3" class="w-5 h-5 text-amber-400"></i> Edit Laporan Absensi' : '<i data-lucide="pen-tool" class="w-5 h-5 text-blue-400"></i> Form Input Laporan Baru';
+        
+        if (!editingId) {
+          const now = new Date();
+          document.getElementById('input-time-start').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+          document.getElementById('input-time-end').value = ''; 
+        }
+        lucide.createIcons();
+      }
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('input-title').value.trim();
+      const category = document.getElementById('input-category').value;
+      const status = document.getElementById('input-status').value;
+      const timeStart = document.getElementById('input-time-start').value; 
+      const timeEnd = document.getElementById('input-time-end').value; 
+      const progress = document.getElementById('input-progress').value; 
+      if (!title || !timeStart || !progress) return;
+
+      if (editingId) {
+        const index = allData.findIndex(d => d.id === editingId);
+        if (index !== -1) {
+          allData[index].title = title;
+          allData[index].category = category;
+          allData[index].status = status;
+          allData[index].timeStart = timeStart; 
+          allData[index].timeEnd = timeEnd; 
+          allData[index].progress = progress; 
+        }
+      } else {
+        allData.push({
+          id: '_' + Math.random().toString(36).substr(2, 9),
+          title, category, status, timeStart, timeEnd, progress,
+          created_at: new Date().toISOString()
+        });
+      }
+
+      editingId = null;
+      updateStats();
+      renderList();
+      toggleForm();
+    }
+
+    function startEdit(id) {
+      const item = allData.find(d => d.id === id);
+      if (!item) return;
+      editingId = id;
+      document.getElementById('input-title').value = item.title;
+      document.getElementById('input-category').value = item.category;
+      document.getElementById('input-status').value = item.status;
+      document.getElementById('input-time-start').value = item.timeStart; 
+      document.getElementById('input-time-end').value = item.timeEnd || ''; 
+      document.getElementById('input-progress').value = item.progress; 
+      
+      const f = document.getElementById('add-form');
+      f.classList.remove('hidden');
+      document.getElementById('form-heading').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-amber-400"></i> Edit Laporan Absensi';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      lucide.createIcons();
+    }
+
+    function confirmDelete(id, isMobile) {
+      if (!isMobile) {
+        renderList(); 
+        const trs = document.getElementById('table-body-pc').children;
+        for (let tr of trs) {
+          const editBtn = tr.querySelector('button');
+          if (editBtn && editBtn.getAttribute('onclick').includes(id)) {
+            tr.querySelector('td:last-child').innerHTML = `
+              <div class="flex justify-center gap-1.5">
+                <button onclick="doDelete('${id}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs">Hapus</button> 
+                <button onclick="renderList()" class="bg-slate-700 text-slate-200 px-2 py-1 rounded text-xs">Batal</button>
+              </div>`;
+            break;
+          }
+        }
+      } else {
+        const card = document.querySelector(`[data-mobile-id="${id}"]`);
+        const actionArea = card.querySelector('.flex.gap-2.items-center');
+        if (actionArea) {
+          actionArea.innerHTML = `
+            <button onclick="doDelete('${id}')" class="px-2 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold">Ya</button>
+            <button onclick="renderList()" class="px-2 py-1.5 bg-slate-800 text-slate-300 rounded-md text-xs">Batal</button>
+          `;
+        }
+      }
+    }
+
+    function doDelete(id) {
+      allData = allData.filter(d => d.id !== id);
+      updateStats();
+      renderList();
+    }
+  </script>
+</body>
+</html>
