@@ -133,7 +133,7 @@
           <i data-lucide="check" class="w-4 h-4"></i> Simpan Laporan
         </button> 
         <button type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm" onclick="toggleForm()">
-          Batal
+          <i data-lucide="x" class="w-4 h-4 inline sm:hidden"></i> Batal
         </button>
       </div>
     </form>
@@ -147,8 +147,14 @@
   </main>
 
   <script>
-    let allData = [];
+    // PERBAIKAN: Ambil data dari localStorage jika ada, kalau tidak ada buat array kosong []
+    let allData = JSON.parse(localStorage.getItem('absensi_data')) || [];
     let editingId = null;
+
+    // Tambahkan fungsi baru untuk menyimpan data ke localStorage
+    function saveData() {
+      localStorage.setItem('absensi_data', JSON.stringify(allData));
+    }
 
     function init() {
       updateStats();
@@ -177,6 +183,7 @@
           const now = new Date();
           item.timeEnd = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         }
+        saveData(); // PERBAIKAN: Simpan perubahan status klik langsung
         renderList();
       }
     }
@@ -347,6 +354,7 @@
         });
       }
 
+      saveData(); // PERBAIKAN: Simpan data setelah ditambah atau diedit
       editingId = null;
       updateStats();
       renderList();
@@ -360,7 +368,7 @@
       document.getElementById('input-title').value = item.title;
       document.getElementById('input-category').value = item.category;
       document.getElementById('input-status').value = item.status;
-      document.getElementById('input-time-start').value = item.timeStart; 
+      document.getElementById('input-time-start').value = item.timeStart;
       document.getElementById('input-time-end').value = item.timeEnd || ''; 
       document.getElementById('input-progress').value = item.progress; 
       
@@ -400,6 +408,7 @@
 
     function doDelete(id) {
       allData = allData.filter(d => d.id !== id);
+      saveData(); // PERBAIKAN: Simpan perubahan data setelah ada data yang dihapus
       updateStats();
       renderList();
     }
