@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard Absensi & Laporan Kerja</title>
+  <link rel="icon" href="osisab.jpeg">
   
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
@@ -12,43 +13,107 @@
   
   <style>
     body { font-family: 'DM Sans', sans-serif; }
-    .fade-in { animation: fadeIn 0.3s ease; }
+    
+    /* Animasi Dasar Form */
+    .fade-in { 
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+    }
     @keyframes fadeIn { 
-      from { opacity: 0; transform: translateY(-8px); } 
+      from { opacity: 0; transform: translateY(-12px); } 
       to { opacity: 1; transform: translateY(0); } 
+    }
+
+    /* Animasi Staggered List Data */
+    .fade-in-up {
+      opacity: 0;
+      animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Efek Floating Label Modern */
+    .floating-group {
+      position: relative;
+    }
+    .floating-input {
+      padding-top: 1.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .floating-label {
+      position: absolute;
+      left: 0.75rem;
+      top: 1rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .floating-input:focus ~ .floating-label,
+    .floating-input:not(:placeholder-shown) ~ .floating-label {
+      top: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #3b82f6;
+      letter-spacing: 0.05em;
+    }
+
+    /* Animasi Pop-up Toast Notification */
+    .toast-animate {
+      animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%) translateY(0); opacity: 0; }
+      to { transform: translateX(0) translateY(0); opacity: 1; }
+    }
+    .toast-fade-out {
+      animation: slideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(120%); opacity: 0; }
     }
   </style>
 </head>
 
-<body class="min-h-screen text-slate-100 bg-slate-950 overflow-x-hidden">
+<body class="min-h-screen text-slate-100 bg-slate-950 overflow-x-hidden antialiased">
 
-  <header class="w-full border-b border-slate-800/80 px-4 py-4 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto flex items-center gap-3">
-      <i data-lucide="clipboard-check" class="text-blue-500 w-7 h-7 flex-shrink-0"></i>
-      <h1 class="text-xl font-bold tracking-tight text-slate-100 sm:text-2xl truncate">Absensi & Laporan Kerja</h1>
+  <div id="toast-container" class="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none w-full max-w-xs sm:max-w-sm px-4 sm:px-0"></div>
+
+  <header class="w-full border-b border-slate-800/80 px-4 py-3 bg-slate-900/60 backdrop-blur sticky top-0 z-50 transition-all duration-300">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3 min-w-0">
+        <img src="osisab.jpeg" alt="Logo OSIS SMK Al-Bahri" class="w-10 h-10 object-contain flex-shrink-0 rounded-full border border-slate-700/50 p-0.5 bg-slate-950 shadow-md">
+        <div class="min-w-0">
+          <h1 class="text-base font-bold tracking-tight text-slate-100 sm:text-lg truncate">Absensi & Laporan Kerja</h1>
+          <p class="text-[10px] sm:text-xs text-slate-400 font-medium tracking-wide truncate">OSIS SMK AL-BAHRI BEKASI</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 bg-slate-950/60 border border-slate-800/80 px-2.5 py-1 rounded-full text-xs font-semibold text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Cloud Terhubung
+      </div>
     </div>
   </header>
 
   <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden w-full">
     
     <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full">
-      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40">
+      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40 hover:border-blue-500/40 hover:bg-slate-900/60 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-black/10">
         <p class="text-xs sm:text-sm uppercase tracking-wide opacity-70 text-slate-400 font-medium">Total Laporan</p>
         <p id="stat-total-value" class="text-2xl sm:text-3xl font-bold mt-1 text-blue-400">0</p>
       </div>
-      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40">
+      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40 hover:border-emerald-500/40 hover:bg-slate-900/60 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-black/10">
         <p class="text-xs sm:text-sm uppercase tracking-wide opacity-70 text-emerald-400 font-medium">Status: Hadir</p>
         <p id="stat-active-value" class="text-2xl sm:text-3xl font-bold mt-1 text-emerald-400">0</p>
       </div>
-      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40">
+      <div class="rounded-xl p-4 sm:p-5 border border-slate-800/60 bg-slate-900/40 hover:border-amber-500/40 hover:bg-slate-900/60 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-black/10">
         <p class="text-xs sm:text-sm uppercase tracking-wide opacity-70 text-amber-400 font-medium">Status: Izin / Sakit</p>
         <p id="stat-pending-value" class="text-2xl sm:text-3xl font-bold mt-1 text-amber-400">0</p>
       </div>
     </section>
 
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-900/20 p-4 rounded-xl border border-slate-800/60 w-full box-border">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-900/20 p-4 rounded-xl border border-slate-800/60 w-full box-border shadow-inner">
       <div class="grid grid-cols-1 gap-2 w-full md:flex md:flex-wrap md:w-auto">
-        <select id="filter-category" class="w-full md:w-auto bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" onchange="renderList()">
+        <select id="filter-category" class="w-full md:w-auto bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200" onchange="renderList()">
           <option value="">Semua Laporan Kerja</option>
           <option value="Angkat Bangku">Angkat Bangku</option>
           <option value="Bersihkan Ruangan">Bersihkan Ruangan</option>
@@ -57,14 +122,14 @@
         </select> 
         
         <div class="grid grid-cols-2 gap-2 w-full md:flex md:w-auto">
-          <select id="filter-status" class="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" onchange="renderList()">
+          <select id="filter-status" class="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200" onchange="renderList()">
             <option value="">Absen</option>
             <option value="Hadir">Hadir</option>
             <option value="Izin">Izin</option>
             <option value="Sakit">Sakit</option>
           </select>
 
-          <select id="filter-progress" class="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" onchange="renderList()">
+          <select id="filter-progress" class="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200" onchange="renderList()">
             <option value="">Status</option>
             <option value="Selesai">Selesai</option>
             <option value="Belum Selesai">Belum Selesai</option>
@@ -72,67 +137,71 @@
         </div>
       </div>
 
-      <button class="w-full md:w-auto px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm flex-shrink-0" onclick="toggleForm()">
+      <button class="w-full md:w-auto px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm flex-shrink-0 transition-all duration-300 transform hover:-translate-y-0.5 shadow-md shadow-blue-600/10" onclick="toggleForm()">
         <i data-lucide="plus-circle" class="w-4 h-4"></i> Isi Absensi & Kerja
       </button>
     </div>
 
-    <form id="add-form" class="hidden fade-in rounded-xl p-4 sm:p-6 space-y-4 bg-slate-900 border border-slate-800 shadow-xl w-full" onsubmit="handleSubmit(event)">
-      <h2 id="form-heading" class="text-base sm:text-lg font-bold text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
-        <i data-lucide="pen-tool" class="w-5 h-5 text-blue-400"></i> Form Input Laporan
-      </h2>
+    <form id="add-form" class="hidden fade-in rounded-xl p-4 sm:p-6 space-y-5 bg-slate-900 border border-slate-800 shadow-2xl w-full" onsubmit="handleSubmit(event)">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h2 id="form-heading" class="text-base sm:text-lg font-bold text-slate-200 flex items-center gap-2">
+          <i data-lucide="pen-tool" class="w-5 h-5 text-blue-400"></i> Form Input Laporan
+        </h2>
+        <img src="https://lh3.googleusercontent.com/d/1wR19uM5I60V9l7t4N4Z7zS4P3B_K6gL_" alt="Logo OSIS Mini" class="w-6 h-6 object-contain opacity-50">
+      </div>
       
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label for="input-title" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Nama Karyawan / Pekerja</label> 
-          <input id="input-title" type="text" required placeholder="Contoh: Ahmad Dhani" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="floating-group">
+          <input id="input-title" type="text" required placeholder=" " class="floating-input w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200">
+          <label for="input-title" class="floating-label text-slate-400 text-sm">Nama Karyawan / Pekerja</label> 
         </div>
 
-        <div>
-          <label for="input-category" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Laporan Pekerjaan Hari Ini</label> 
-          <select id="input-category" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-            <option value="Angkat Bangku">Angkat Bangku</option>
-            <option value="Bersihkan Ruangan">Bersihkan Ruangan</option>
-            <option value="Atur Meja">Atur Meja</option>
-            <option value="Lainnya">Tugas Lainnya / Tidak Ada</option>
-          </select>
+        <div class="floating-group">
+          <input id="input-category" type="text" required list="job-options" placeholder=" " class="floating-input w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200">
+          <label for="input-category" class="floating-label text-slate-400 text-sm">Laporan Pekerjaan Hari Ini</label> 
+          <datalist id="job-options">
+            <option value="Angkat Bangku"></option>
+            <option value="Bersihkan Ruangan"></option>
+            <option value="Atur Meja"></option>
+            <option value="Lainnya"></option>
+          </datalist>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div class="col-span-2 sm:col-span-1">
-          <label for="input-status" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Status Absensi</label> 
-          <select id="input-status" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="col-span-2 sm:col-span-1 floating-group">
+          <select id="input-status" required class="floating-input w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200">
             <option value="Hadir">Hadir</option>
             <option value="Izin">Izin</option>
             <option value="Sakit">Sakit</option>
           </select>
+          <label for="input-status" class="floating-label text-blue-500 text-xs font-bold" style="top: 0.35rem;">Status Absensi</label>
         </div>
 
-        <div>
-          <label for="input-time-start" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Jam Masuk</label> 
-          <input id="input-time-start" type="time" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        <div class="floating-group">
+          <input id="input-time-start" type="time" required placeholder=" " class="floating-input w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200">
+          <label for="input-time-start" class="floating-label text-blue-500 text-xs font-bold" style="top: 0.35rem;">Jam Masuk</label>
         </div>
 
-        <div>
-          <label for="input-time-end" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Jam Selesai</label> 
-          <input id="input-time-end" type="time" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        <div class="floating-group">
+          <input id="input-time-end" type="time" placeholder=" " class="floating-input w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200">
+          <label for="input-time-end" class="floating-label text-blue-500 text-xs font-bold" style="top: 0.35rem;">Jam Selesai</label>
         </div>
 
-        <div class="col-span-2 sm:col-span-1">
-          <label for="input-progress" class="block text-xs sm:text-sm font-semibold tracking-wide text-slate-300 mb-1.5">Status Tugas</label> 
-          <select id="input-progress" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        <div class="col-span-2 sm:col-span-1 floating-group">
+          <select id="input-progress" required class="floating-input w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 text-sm focus:outline-none focus:border-blue-500 transition-all duration-200">
             <option value="Selesai">Selesai</option>
             <option value="Belum Selesai">Belum Selesai</option>
           </select>
+          <label for="input-progress" class="floating-label text-blue-500 text-xs font-bold" style="top: 0.35rem;">Status Tugas</label>
         </div>
       </div>
       
       <div class="flex gap-2 pt-2 border-t border-slate-800">
-        <button type="submit" id="submit-btn" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-emerald-600 hover:bg-emerald-500 text-white text-sm flex items-center justify-center gap-1">
+        <button type="submit" id="submit-btn" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-emerald-600 hover:bg-emerald-500 text-white text-sm flex items-center justify-center gap-1 transition-all duration-200 active:scale-95 shadow-md shadow-emerald-600/10">
           <i data-lucide="check" class="w-4 h-4"></i> Simpan Laporan
         </button> 
-        <button type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm" onclick="toggleForm()">
+        <button type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm transition-all duration-200" onclick="toggleForm()">
           Batal
         </button>
       </div>
@@ -140,7 +209,7 @@
 
     <div id="data-container" class="w-full overflow-hidden"></div>
 
-    <p id="empty-state" class="text-center py-12 text-slate-600 text-sm w-full">
+    <p id="empty-state" class="text-center py-12 text-slate-600 text-sm w-full transition-all duration-300">
       <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
       Belum ada data absensi. Klik tombol di atas untuk mengisi laporan baru.
     </p>
@@ -150,7 +219,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <script>
-    // Konfigurasi Firebase Realtime (LINK SINGAPORE SUDAH DI-PASTE DI SINI)
     const firebaseConfig = {
       apiKey: "AIzaSyD-Abaikan-Saja-Ini-Gak-Apa-Apa", 
       authDomain: "abaikan-saja",
@@ -161,14 +229,34 @@
       appId: "1:1234:web:abcd"
     };
 
-    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     let allData = [];
     let editingId = null;
 
-    // Sinkronisasi data cloud Firebase secara realtime
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const bgColor = type === 'success' ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-300' : 'bg-red-950/90 border-red-500/40 text-red-300';
+      const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+      
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur shadow-xl w-full toast-animate ${bgColor}`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
+        <p class="text-xs sm:text-sm font-medium">${message}</p>
+      `;
+      
+      container.appendChild(toast);
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        toast.classList.add('toast-fade-out');
+        toast.addEventListener('animationend', () => toast.remove());
+      }, 3000);
+    }
+
     database.ref('absensi_laporan').on('value', (snapshot) => {
       allData = [];
       if (snapshot.exists()) {
@@ -176,7 +264,6 @@
         Object.keys(data).forEach((key) => {
           allData.push({ id: key, ...data[key] });
         });
-        // Urutkan data berdasarkan inputan terbaru ke terlama
         allData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       }
       updateStats();
@@ -207,8 +294,8 @@
           updateData.timeEnd = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         }
         
-        // Simpan langsung perubahan status ke Firebase cloud
-        database.ref('absensi_laporan/' + id).update(updateData);
+        database.ref('absensi_laporan/' + id).update(updateData)
+          .then(() => showToast(`Status tugas berhasil diubah ke ${nextProgress}`));
       }
     }
 
@@ -226,7 +313,7 @@
       empty.classList.add('hidden');
 
       container.innerHTML = `
-        <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/10 max-w-full">
+        <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-800/80 bg-slate-900/10 max-w-full shadow-lg">
           <table class="w-full text-sm text-left table-auto">
             <thead class="bg-slate-900 text-slate-400 uppercase text-xs tracking-wider border-b border-slate-800">
               <tr>
@@ -249,26 +336,29 @@
       const tbodyPc = document.getElementById('table-body-pc');
       const mobileList = document.getElementById('card-list-mobile');
 
-      filtered.forEach(item => {
+      filtered.forEach((item, index) => {
         const date = new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         
         let statusClass = item.status === 'Hadir' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : (item.status === 'Izin' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20');
         let statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs border ${statusClass}">${item.status}</span>`;
 
-        let progClass = item.progress === 'Selesai' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-        let dotClass = item.progress === 'Selesai' ? 'bg-teal-400' : 'bg-orange-400';
+        let progClass = item.progress === 'Selesai' ? 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20';
+        let dotClass = item.progress === 'Selesai' ? 'bg-teal-400' : 'bg-orange-400 animate-pulse ring-2 ring-orange-500/30';
+        
         let progressBtnHtml = `
-          <button onclick="toggleProgressDirectly('${item.id}')" class="px-2 py-1 rounded-md text-xs font-medium border flex items-center gap-1.5 transition ${progClass}">
+          <button onclick="toggleProgressDirectly('${item.id}')" class="px-2 py-1 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-all duration-300 active:scale-95 ${progClass}">
             <span class="w-1.5 h-1.5 rounded-full ${dotClass}"></span>
             <span>${item.progress}</span>
           </button>`;
 
         const displayTimeEnd = item.timeEnd ? item.timeEnd : '--:--';
         const timeDisplay = `<span class="text-blue-400 font-semibold">${item.timeStart}</span> <span class="text-slate-600">-</span> <span class="text-indigo-400 font-semibold">${displayTimeEnd}</span> <span class="text-[10px] text-slate-500">WIB</span>`;
+        const animationDelay = `${index * 0.05}s`;
 
-        // Versi PC
+        // Render PC
         const tr = document.createElement('tr');
-        tr.className = 'border-t border-slate-900 hover:bg-slate-900/30 transition';
+        tr.className = 'border-t border-slate-900 hover:bg-slate-900/40 transition-colors duration-200 fade-in-up';
+        tr.style.animationDelay = animationDelay;
         tr.innerHTML = `
           <td class="px-4 py-3.5 font-medium text-slate-200 whitespace-nowrap">${esc(item.title)}</td>
           <td class="px-4 py-3.5 text-slate-400 whitespace-nowrap"><span class="flex items-center gap-1.5"><i data-lucide="wrench" class="w-3.5 h-3.5 opacity-60"></i> ${esc(item.category)}</span></td>
@@ -278,15 +368,16 @@
           <td class="px-4 py-3.5 whitespace-nowrap">${progressBtnHtml}</td>
           <td class="px-4 py-3.5 text-center whitespace-nowrap">
             <div class="flex justify-center gap-3">
-              <button onclick="startEdit('${item.id}')" class="text-blue-400 hover:text-blue-300"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-              <button onclick="confirmDelete('${item.id}', false)" class="text-red-400 hover:text-red-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              <button onclick="startEdit('${item.id}')" class="text-blue-400 hover:text-blue-300 transition-colors duration-200 hover:scale-110 transform"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+              <button onclick="confirmDelete('${item.id}', false)" class="text-red-400 hover:text-red-300 transition-colors duration-200 hover:scale-110 transform"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </div>
           </td>`;
         tbodyPc.appendChild(tr);
 
-        // Versi HP
+        // Render Mobile
         const card = document.createElement('div');
-        card.className = 'p-4 rounded-xl border border-slate-800/80 bg-slate-900/20 space-y-3 w-full max-w-full box-border';
+        card.className = 'p-4 rounded-xl border border-slate-800/80 bg-slate-900/20 space-y-3 w-full max-w-full box-border fade-in-up transform transition-all duration-300 hover:-translate-y-1 hover:border-slate-700 hover:bg-slate-900/30 shadow-md shadow-black/5';
+        card.style.animationDelay = animationDelay;
         card.setAttribute('data-mobile-id', item.id);
         card.innerHTML = `
           <div class="flex items-start justify-between border-b border-slate-900/80 pb-2 gap-2">
@@ -314,8 +405,8 @@
               ${progressBtnHtml}
             </div>
             <div class="flex gap-2 items-center flex-shrink-0">
-              <button onclick="startEdit('${item.id}')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg flex items-center gap-1 text-xs font-medium"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit</button>
-              <button onclick="confirmDelete('${item.id}', true)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-red-400 rounded-lg flex items-center gap-1 text-xs font-medium"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus</button>
+              <button onclick="startEdit('${item.id}')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-blue-400 rounded-lg flex items-center gap-1 text-xs font-medium transition-all duration-200"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit</button>
+              <button onclick="confirmDelete('${item.id}', true)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-red-400 rounded-lg flex items-center gap-1 text-xs font-medium transition-all duration-200"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus</button>
             </div>
           </div>
         `;
@@ -343,10 +434,7 @@
         
         if (!editingId) {
           const now = new Date();
-          const currentHour = String(now.getHours()).padStart(2, '0');
-          const currentMinute = String(now.getMinutes()).padStart(2, '0');
-          
-          document.getElementById('input-time-start').value = `${currentHour}:${currentMinute}`;
+          document.getElementById('input-time-start').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
           document.getElementById('input-time-end').value = ''; 
         }
         lucide.createIcons();
@@ -356,12 +444,12 @@
     function handleSubmit(e) {
       e.preventDefault();
       const title = document.getElementById('input-title').value.trim();
-      const category = document.getElementById('input-category').value;
+      const category = document.getElementById('input-category').value.trim(); 
       const status = document.getElementById('input-status').value;
       const timeStart = document.getElementById('input-time-start').value; 
       const timeEnd = document.getElementById('input-time-end').value; 
       const progress = document.getElementById('input-progress').value; 
-      if (!title || !timeStart || !progress) return;
+      if (!title || !category || !timeStart || !progress) return;
 
       const payload = { title, category, status, timeStart, timeEnd, progress };
 
@@ -370,12 +458,14 @@
           .then(() => {
             editingId = null;
             toggleForm();
+            showToast('Laporan berhasil diperbarui!');
           });
       } else {
         payload.created_at = new Date().toISOString();
         database.ref('absensi_laporan').push(payload)
           .then(() => {
             toggleForm();
+            showToast('Laporan baru berhasil ditambahkan!');
           });
       }
     }
@@ -405,9 +495,9 @@
           const editBtn = tr.querySelector('button');
           if (editBtn && editBtn.getAttribute('onclick').includes(id)) {
             tr.querySelector('td:last-child').innerHTML = `
-              <div class="flex justify-center gap-1.5">
-                <button onclick="doDelete('${id}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs">Hapus</button> 
-                <button onclick="renderList()" class="bg-slate-700 text-slate-200 px-2 py-1 rounded text-xs">Batal</button>
+              <div class="flex justify-center gap-1.5 fade-in">
+                <button onclick="doDelete('${id}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs transition-all duration-200 font-medium active:scale-95">Hapus</button> 
+                <button onclick="renderList()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded text-xs transition-all duration-200 font-medium">Batal</button>
               </div>`;
             break;
           }
@@ -417,15 +507,18 @@
         const actionArea = card.querySelector('.flex.gap-2.items-center');
         if (actionArea) {
           actionArea.innerHTML = `
-            <button onclick="doDelete('${id}')" class="px-2 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold">Ya</button>
-            <button onclick="renderList()" class="px-2 py-1.5 bg-slate-800 text-slate-300 rounded-md text-xs">Batal</button>
+            <div class="flex gap-1.5 fade-in">
+              <button onclick="doDelete('${id}')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-md text-xs font-semibold transition-all duration-200 active:scale-95">Ya</button>
+              <button onclick="renderList()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-xs transition-all duration-200">Batal</button>
+            </div>
           `;
         }
       }
     }
 
     function doDelete(id) {
-      database.ref('absensi_laporan/' + id).remove();
+      database.ref('absensi_laporan/' + id).remove()
+        .then(() => showToast('Laporan berhasil dihapus!', 'error'));
     }
   </script>
 </body>
