@@ -133,7 +133,7 @@
           <i data-lucide="check" class="w-4 h-4"></i> Simpan Laporan
         </button> 
         <button type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm" onclick="toggleForm()">
-          <i data-lucide="x" class="w-4 h-4 inline sm:hidden"></i> Batal
+          Batal
         </button>
       </div>
     </form>
@@ -146,21 +146,42 @@
     </p>
   </main>
 
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
   <script>
-    // PERBAIKAN: Ambil data dari localStorage jika ada, kalau tidak ada buat array kosong []
-    let allData = JSON.parse(localStorage.getItem('absensi_data')) || [];
+    // Konfigurasi Firebase Realtime (LINK SINGAPORE SUDAH DI-PASTE DI SINI)
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-Abaikan-Saja-Ini-Gak-Apa-Apa", 
+      authDomain: "abaikan-saja",
+      databaseURL: "https://absen-osis-default-rtdb.asia-southeast1.firebasedatabase.app/", 
+      projectId: "abaikan-saja",
+      storageBucket: "abaikan-saja",
+      messagingSenderId: "123456",
+      appId: "1:1234:web:abcd"
+    };
+
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let allData = [];
     let editingId = null;
 
-    // Tambahkan fungsi baru untuk menyimpan data ke localStorage
-    function saveData() {
-      localStorage.setItem('absensi_data', JSON.stringify(allData));
-    }
-
-    function init() {
+    // Sinkronisasi data cloud Firebase secara realtime
+    database.ref('absensi_laporan').on('value', (snapshot) => {
+      allData = [];
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        Object.keys(data).forEach((key) => {
+          allData.push({ id: key, ...data[key] });
+        });
+        // Urutkan data berdasarkan inputan terbaru ke terlama
+        allData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
       updateStats();
       renderList();
-    }
-    window.onload = init;
+    });
 
     function updateStats() {
       document.getElementById('stat-total-value').textContent = allData.length;
@@ -178,13 +199,16 @@
     function toggleProgressDirectly(id) {
       const item = allData.find(d => d.id === id);
       if (item) {
-        item.progress = (item.progress === 'Selesai') ? 'Belum Selesai' : 'Selesai';
-        if (item.progress === 'Selesai' && !item.timeEnd) {
+        const nextProgress = (item.progress === 'Selesai') ? 'Belum Selesai' : 'Selesai';
+        let updateData = { progress: nextProgress };
+        
+        if (nextProgress === 'Selesai' && !item.timeEnd) {
           const now = new Date();
-          item.timeEnd = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+          updateData.timeEnd = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         }
-        saveData(); // PERBAIKAN: Simpan perubahan status klik langsung
-        renderList();
+        
+        // Simpan langsung perubahan status ke Firebase cloud
+        database.ref('absensi_laporan/' + id).update(updateData);
       }
     }
 
@@ -319,7 +343,10 @@
         
         if (!editingId) {
           const now = new Date();
-          document.getElementById('input-time-start').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+          const currentHour = String(now.getHours()).padStart(2, '0');
+          const currentMinute = String(now.getMinutes()).padStart(2, '0');
+          
+          document.getElementById('input-time-start').value = `${currentHour}:${currentMinute}`;
           document.getElementById('input-time-end').value = ''; 
         }
         lucide.createIcons();
@@ -336,29 +363,21 @@
       const progress = document.getElementById('input-progress').value; 
       if (!title || !timeStart || !progress) return;
 
-      if (editingId) {
-        const index = allData.findIndex(d => d.id === editingId);
-        if (index !== -1) {
-          allData[index].title = title;
-          allData[index].category = category;
-          allData[index].status = status;
-          allData[index].timeStart = timeStart; 
-          allData[index].timeEnd = timeEnd; 
-          allData[index].progress = progress; 
-        }
-      } else {
-        allData.push({
-          id: '_' + Math.random().toString(36).substr(2, 9),
-          title, category, status, timeStart, timeEnd, progress,
-          created_at: new Date().toISOString()
-        });
-      }
+      const payload = { title, category, status, timeStart, timeEnd, progress };
 
-      saveData(); // PERBAIKAN: Simpan data setelah ditambah atau diedit
-      editingId = null;
-      updateStats();
-      renderList();
-      toggleForm();
+      if (editingId) {
+        database.ref('absensi_laporan/' + editingId).update(payload)
+          .then(() => {
+            editingId = null;
+            toggleForm();
+          });
+      } else {
+        payload.created_at = new Date().toISOString();
+        database.ref('absensi_laporan').push(payload)
+          .then(() => {
+            toggleForm();
+          });
+      }
     }
 
     function startEdit(id) {
@@ -381,7 +400,6 @@
 
     function confirmDelete(id, isMobile) {
       if (!isMobile) {
-        renderList(); 
         const trs = document.getElementById('table-body-pc').children;
         for (let tr of trs) {
           const editBtn = tr.querySelector('button');
@@ -407,10 +425,7 @@
     }
 
     function doDelete(id) {
-      allData = allData.filter(d => d.id !== id);
-      saveData(); // PERBAIKAN: Simpan perubahan data setelah ada data yang dihapus
-      updateStats();
-      renderList();
+      database.ref('absensi_laporan/' + id).remove();
     }
   </script>
 </body>
